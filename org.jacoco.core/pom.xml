@@ -38,6 +38,17 @@
       <groupId>org.ow2.asm</groupId>
       <artifactId>asm-tree</artifactId>
     </dependency>
+
+    <dependency>
+      <groupId>org.eclipse.jdt</groupId>
+      <artifactId>org.eclipse.jdt.core</artifactId>
+      <version>3.35.0</version>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.jgit</groupId>
+      <artifactId>org.eclipse.jgit</artifactId>
+      <version>6.7.0.202309050840-r</version>
+    </dependency>
   </dependencies>
 
   <build>
@@ -63,6 +74,14 @@
           <archive>
             <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
           </archive>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <source>6</source>
+          <target>6</target>
         </configuration>
       </plugin>
     </plugins>

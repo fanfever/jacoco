@@ -12,14 +12,12 @@
  *******************************************************************************/
 package org.jacoco.core.analysis;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 import org.jacoco.core.internal.analysis.BundleCoverageImpl;
 import org.jacoco.core.internal.analysis.SourceFileCoverageImpl;
+import org.jacoco.core.internal.diff.ClassInfo;
+import org.jacoco.core.internal.diff.CodeDiff;
 
 /**
  * Builder for hierarchical {@link ICoverageNode} structures from single
@@ -41,6 +39,8 @@ public class CoverageBuilder implements ICoverageVisitor {
 
 	private final Map<String, ISourceFileCoverage> sourcefiles;
 
+	public static List<ClassInfo> classInfos;
+
 	/**
 	 * Create a new builder.
 	 *
@@ -48,6 +48,58 @@ public class CoverageBuilder implements ICoverageVisitor {
 	public CoverageBuilder() {
 		this.classes = new HashMap<String, IClassCoverage>();
 		this.sourcefiles = new HashMap<String, ISourceFileCoverage>();
+	}
+
+	/**
+	 * compare new branch withe master branch
+	 *
+	 * @param gitPath
+	 *            local gitPath
+	 * @param branchName
+	 *            new test branch name
+	 */
+	public CoverageBuilder(String gitPath, String branchName) {
+		this.classes = new HashMap<String, IClassCoverage>();
+		this.sourcefiles = new HashMap<String, ISourceFileCoverage>();
+		classInfos = CodeDiff.diffBranchToBranch(gitPath, branchName,
+				CodeDiff.MASTER);
+	}
+
+	/**
+	 * compare new newBranchName withe oldBranchName
+	 *
+	 * @param gitPath
+	 *            local gitPath
+	 * @param newBranchName
+	 *            newBranchName
+	 * @param oldBranchName
+	 *            oldBranchName
+	 */
+	public CoverageBuilder(String gitPath, String newBranchName,
+			String oldBranchName) {
+		this.classes = new HashMap<String, IClassCoverage>();
+		this.sourcefiles = new HashMap<String, ISourceFileCoverage>();
+		classInfos = CodeDiff.diffBranchToBranch(gitPath, newBranchName,
+				oldBranchName);
+	}
+
+	/**
+	 * compare new Tag withe old Tag
+	 *
+	 * @param gitPath
+	 *            local gitPath
+	 * @param branchName
+	 *            develop branchName
+	 * @param newTag
+	 *            new Tag
+	 * @param oldTag
+	 *            old Tag
+	 */
+	public CoverageBuilder(String gitPath, String branchName, String newTag,
+			String oldTag) {
+		this.classes = new HashMap<String, IClassCoverage>();
+		this.sourcefiles = new HashMap<String, ISourceFileCoverage>();
+		classInfos = CodeDiff.diffTagToTag(gitPath, branchName, newTag, oldTag);
 	}
 
 	/**
