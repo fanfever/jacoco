@@ -12,17 +12,26 @@
  *******************************************************************************/
 package org.jacoco.core.internal.diff;
 
+import com.jcraft.jsch.JSch;
+import com.jcraft.jsch.JSchException;
+import com.jcraft.jsch.Session;
 import org.eclipse.jgit.api.CreateBranchCommand;
 import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.TransportConfigCallback;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.*;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevTree;
 import org.eclipse.jgit.revwalk.RevWalk;
+import org.eclipse.jgit.transport.SshTransport;
+import org.eclipse.jgit.transport.Transport;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
+import org.eclipse.jgit.transport.ssh.jsch.JschConfigSessionFactory;
+import org.eclipse.jgit.transport.ssh.jsch.OpenSshConfig;
 import org.eclipse.jgit.treewalk.AbstractTreeIterator;
 import org.eclipse.jgit.treewalk.CanonicalTreeParser;
 import org.eclipse.jgit.treewalk.TreeWalk;
+import org.eclipse.jgit.util.FS;
 
 import java.io.*;
 import java.util.*;
@@ -33,27 +42,46 @@ import java.util.*;
 public class GitAdapter {
 	private Git git;
 	private Repository repository;
-	private String gitFilePath;
+	private final String gitFilePath;
 
 	// Git授权
 	private static UsernamePasswordCredentialsProvider usernamePasswordCredentialsProvider;
 
-	public GitAdapter(String gitFilePath) {
+	TransportConfigCallback transportConfigCallback = new TransportConfigCallback() {
+
+		@Override
+		public void configure(Transport transport) {
+			SshTransport sshTransport = (SshTransport) transport;
+			sshTransport.setSshSessionFactory(new JschConfigSessionFactory() {
+
+				@Override
+				protected void configure(OpenSshConfig.Host host,
+						Session session) {
+					// 设置 SSH 客户端在连接远程服务器时不进行严格的主机密钥检查
+					session.setConfig("StrictHostKeyChecking", "no");
+				}
+
+				@Override
+				protected JSch createDefaultJSch(FS fs) throws JSchException {
+					JSch jSch = super.createDefaultJSch(fs);
+					// 添加私钥文件用于身份验证
+					jSch.addIdentity("~/.ssh/id_rsa");
+					return jSch;
+				}
+			});
+		}
+	};
+
+	public GitAdapter(String gitFilePath) throws GitAPIException, IOException {
 		this.gitFilePath = gitFilePath;
 		this.initGit(gitFilePath);
 	}
 
-	private void initGit(String gitFilePath) {
-		try {
-			git = Git.open(new File(gitFilePath));
-			repository = git.getRepository();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-
-	public String getGitFilePath() {
-		return gitFilePath;
+	private void initGit(String gitFilePath)
+			throws GitAPIException, IOException {
+		git = Git.open(new File(gitFilePath));
+		git.fetch().setTransportConfigCallback(transportConfigCallback).call();
+		repository = git.getRepository();
 	}
 
 	public Git getGit() {
@@ -65,23 +93,6 @@ public class GitAdapter {
 	}
 
 	/**
-	 * git授权。需要设置拥有所有权限的用户
-	 *
-	 * @param username
-	 *            git用户名
-	 * @param password
-	 *            git用户密码
-	 */
-	public static void setCredentialsProvider(String username,
-			String password) {
-		if (usernamePasswordCredentialsProvider == null
-				|| !usernamePasswordCredentialsProvider.isInteractive()) {
-			usernamePasswordCredentialsProvider = new UsernamePasswordCredentialsProvider(
-					username, password);
-		}
-	}
-
-	/**
 	 * 获取指定分支的指定文件内容
 	 *
 	 * @param branchName
@@ -89,7 +100,6 @@ public class GitAdapter {
 	 * @param javaPath
 	 *            文件路径
 	 * @return java类
-	 * @throws IOException
 	 */
 	public String getBranchSpecificFileContent(String branchName,
 			String javaPath) throws IOException {
@@ -108,7 +118,6 @@ public class GitAdapter {
 	 * @param javaPath
 	 *            件路径
 	 * @return java类
-	 * @throws IOException
 	 */
 	public String getTagRevisionSpecificFileContent(String tagRevision,
 			String javaPath) throws IOException {
@@ -129,7 +138,6 @@ public class GitAdapter {
 	 * @param walk
 	 *            git RevWalk
 	 * @return java类
-	 * @throws IOException
 	 */
 	private String getFileContent(String javaPath, RevTree tree, RevWalk walk)
 			throws IOException {
@@ -146,8 +154,6 @@ public class GitAdapter {
 	 *
 	 * @param localRef
 	 *            本地分支
-	 * @return
-	 * @throws IOException
 	 */
 	public AbstractTreeIterator prepareTreeParser(Ref localRef)
 			throws IOException {
@@ -197,8 +203,7 @@ public class GitAdapter {
 						CreateBranchCommand.SetupUpstreamMode.SET_UPSTREAM)
 				.call();
 		// 拉取最新代码
-		git.pull().setCredentialsProvider(usernamePasswordCredentialsProvider)
-				.call();
+		git.pull().setTransportConfigCallback(transportConfigCallback).call();
 	}
 
 	/**
@@ -215,7 +220,7 @@ public class GitAdapter {
 		String localRefObjectId = localRef.getObjectId().getName();
 		// 获取远程所有分支
 		Collection<Ref> remoteRefs = git.lsRemote()
-				.setCredentialsProvider(usernamePasswordCredentialsProvider)
+				.setTransportConfigCallback(transportConfigCallback)
 				.setHeads(true).call();
 		for (Ref remoteRef : remoteRefs) {
 			String remoteRefName = remoteRef.getName();

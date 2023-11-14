@@ -54,6 +54,32 @@ public class Report extends Command {
 	@Option(name = "--sourcefiles", usage = "location of the source files", metaVar = "<path>")
 	List<File> sourcefiles = new ArrayList<File>();
 
+	// @Option(name = "--ignorePaths", usage = "ignore paths", metaVar =
+	// "<ignorePaths>")
+	// List<String> ignorePaths = new ArrayList<String>();
+	//
+	// @Option(name = "--ignoreFilenameSuffixes", usage = "ignore filename
+	// suffixes", metaVar = "<ignoreFilenameSuffixes>")
+	// List<String> ignoreFilenameSuffixes = new ArrayList<String>();
+
+	@Option(name = "--diffMode", usage = "1. all, 2. diff commit, 3. diff branch", metaVar = "<diffMode>")
+	int diffMode = DIFF_MODE.ALL;
+
+	@Option(name = "--gitPath", usage = "git path", metaVar = "<gitPath>")
+	String gitPath;
+
+	@Option(name = "--branch", usage = "branch", metaVar = "<branch>")
+	String branch;
+
+	@Option(name = "--referenceBranch", usage = "reference branch", metaVar = "<referenceBranch>")
+	String referenceBranch;
+
+	@Option(name = "--commit", usage = "commit", metaVar = "<commit>")
+	String commit;
+
+	@Option(name = "--referenceCommit", usage = "reference commit", metaVar = "<referenceCommit>")
+	String referenceCommit;
+
 	@Option(name = "--tabwith", usage = "tab stop width for the source pages (default 4)", metaVar = "<n>")
 	int tabwidth = 4;
 
@@ -104,7 +130,19 @@ public class Report extends Command {
 
 	private IBundleCoverage analyze(final ExecutionDataStore data,
 			final PrintWriter out) throws IOException {
-		final CoverageBuilder builder = new CoverageBuilder();
+		CoverageBuilder builder;
+		switch (diffMode) {
+		case DIFF_MODE.COMMIT:
+			builder = new CoverageBuilder(gitPath, branch, commit,
+					referenceCommit);
+			break;
+		case DIFF_MODE.BRANCH:
+			builder = new CoverageBuilder(gitPath, branch, referenceBranch);
+			break;
+		default:
+			builder = new CoverageBuilder();
+		}
+
 		final Analyzer analyzer = new Analyzer(data, builder);
 		for (final File f : classfiles) {
 			analyzer.analyzeAll(f);
@@ -169,6 +207,13 @@ public class Report extends Command {
 			multi.add(new DirectorySourceFileLocator(f, encoding, tabwidth));
 		}
 		return multi;
+	}
+
+	class DIFF_MODE {
+		public static final int ALL = 1;
+		public static final int COMMIT = 2;
+		public static final int BRANCH = 3;
+
 	}
 
 }

@@ -199,7 +199,6 @@ public class CodeDiff {
 			}
 			final List<DiffEntry> diffEntryList = cutList;
 			task = new Callable<List<ClassInfo>>() {
-				@Override
 				public List<ClassInfo> call() throws Exception {
 					List<ClassInfo> allList = new ArrayList<ClassInfo>();
 					for (DiffEntry diffEntry : diffEntryList) {
@@ -349,7 +348,6 @@ public class CodeDiff {
 			}
 			final List<DiffEntry> diffEntryList = cutList;
 			task = new Callable<List<ClassInfo>>() {
-				@Override
 				public List<ClassInfo> call() throws Exception {
 					List<ClassInfo> allList = new ArrayList<ClassInfo>();
 					for (DiffEntry diffEntry : diffEntryList) {
