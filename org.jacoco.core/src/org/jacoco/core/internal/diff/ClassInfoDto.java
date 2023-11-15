@@ -14,66 +14,28 @@ package org.jacoco.core.internal.diff;
 
 import java.util.List;
 
-public class ClassInfo {
+public class ClassInfoDto {
 	/**
 	 * java文件
 	 */
 	private String classFile;
-	/**
-	 * 类名
-	 */
+
 	private String className;
-	/**
-	 * 包名
-	 */
+
 	private String packages;
 
 	/**
 	 * 类中的方法
 	 */
-	private List<MethodInfo> methodInfos;
-
-	/**
-	 * 新增的行数
-	 */
-	private List<int[]> addLines;
-
-	/**
-	 * 删除的行数
-	 */
-	private List<int[]> delLines;
+	private List<MethodInfoDto> methodInfos;
 
 	/**
 	 * 修改类型
 	 */
 	private String type;
 
-	public String getType() {
-		return type;
-	}
-
-	public void setType(String type) {
-		this.type = type;
-	}
-
-	public List<int[]> getAddLines() {
-		return addLines;
-	}
-
-	public void setAddLines(List<int[]> addLines) {
-		this.addLines = addLines;
-	}
-
-	public List<int[]> getDelLines() {
-		return delLines;
-	}
-
-	public void setDelLines(List<int[]> delLines) {
-		this.delLines = delLines;
-	}
-
 	public String getClassFile() {
-		return classFile;
+		return packages + "/" + className;
 	}
 
 	public void setClassFile(String classFile) {
@@ -96,11 +58,19 @@ public class ClassInfo {
 		this.packages = packages;
 	}
 
-	public List<MethodInfo> getMethodInfos() {
+	public List<MethodInfoDto> getMethodInfos() {
 		return methodInfos;
 	}
 
-	public void setMethodInfos(List<MethodInfo> methodInfos) {
+	public void setMethodInfos(List<MethodInfoDto> methodInfos) {
 		this.methodInfos = methodInfos;
+	}
+
+	public String getType() {
+		return type;
+	}
+
+	public void setType(String type) {
+		this.type = type;
 	}
 }

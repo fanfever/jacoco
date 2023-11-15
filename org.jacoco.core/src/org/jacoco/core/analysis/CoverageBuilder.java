@@ -16,7 +16,7 @@ import java.util.*;
 
 import org.jacoco.core.internal.analysis.BundleCoverageImpl;
 import org.jacoco.core.internal.analysis.SourceFileCoverageImpl;
-import org.jacoco.core.internal.diff.ClassInfo;
+import org.jacoco.core.internal.diff.ClassInfoDto;
 import org.jacoco.core.internal.diff.CodeDiff;
 
 /**
@@ -39,7 +39,7 @@ public class CoverageBuilder implements ICoverageVisitor {
 
 	private final Map<String, ISourceFileCoverage> sourcefiles;
 
-	public static List<ClassInfo> classInfos;
+	public List<ClassInfoDto> classInfos;
 
 	/**
 	 * Create a new builder.
@@ -118,6 +118,14 @@ public class CoverageBuilder implements ICoverageVisitor {
 	 */
 	public Collection<ISourceFileCoverage> getSourceFiles() {
 		return Collections.unmodifiableCollection(sourcefiles.values());
+	}
+
+	public List<ClassInfoDto> getClassInfos() {
+		return classInfos;
+	}
+
+	public void setClassInfos(List<ClassInfoDto> classInfos) {
+		this.classInfos = classInfos;
 	}
 
 	/**

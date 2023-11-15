@@ -12,9 +12,10 @@
  *******************************************************************************/
 package org.jacoco.core.internal.flow;
 
-import org.jacoco.core.analysis.CoverageBuilder;
-import org.jacoco.core.internal.diff.ClassInfo;
-import org.jacoco.core.internal.diff.MethodInfo;
+import org.jacoco.core.internal.analysis.ClassAnalyzer;
+import org.jacoco.core.internal.diff.ClassInfoDto;
+import org.jacoco.core.internal.diff.CodeDiffUtil;
+import org.jacoco.core.internal.diff.MethodInfoDto;
 import org.jacoco.core.internal.instr.InstrSupport;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.MethodVisitor;
@@ -71,11 +72,23 @@ public class ClassProbesAdapter extends ClassVisitor
 		final MethodProbesVisitor mv = cv.visitMethod(access, name, desc,
 				signature, exceptions);
 		// 增量计算覆盖率
-		if (mv != null && isContainsMethod(name, CoverageBuilder.classInfos)) {
-			methodProbes = mv;
+		if (null != mv) {
+			List<ClassInfoDto> classInfos = null;
+			if (cv instanceof ClassAnalyzer) {
+				classInfos = ((ClassAnalyzer) cv).getClassInfos();
+			}
+			// 增量代码，有点绕，由于参数定义成final,无法第二次指定,代码无法简化
+			if (null != classInfos && !classInfos.isEmpty()) {
+				if (CodeDiffUtil.checkMethodIn(this.name, name, desc,
+						classInfos)) {
+					methodProbes = mv;
+				} else {
+					methodProbes = EMPTY_METHOD_PROBES_VISITOR;
+				}
+			} else {
+				methodProbes = mv;
+			}
 		} else {
-			// We need to visit the method in any case, otherwise probe ids
-			// are not reproducible
 			methodProbes = EMPTY_METHOD_PROBES_VISITOR;
 		}
 		return new MethodSanitizer(null, access, name, desc, signature,
@@ -112,25 +125,25 @@ public class ClassProbesAdapter extends ClassVisitor
 		return counter++;
 	}
 
-	private boolean isContainsMethod(String currentMethod,
-			List<ClassInfo> classInfos) {
-		if (classInfos == null || classInfos.isEmpty()) {
-			return true;
-		}
-		String currentClassName = name.replaceAll("/", ".");
-		for (ClassInfo classInfo : classInfos) {
-			String className = classInfo.getPackages() + "."
-					+ classInfo.getClassName();
-			if (currentClassName.equals(className)) {
-				for (MethodInfo methodInfo : classInfo.getMethodInfos()) {
-					String methodName = methodInfo.getMethodName();
-					if (currentMethod.equals(methodName)) {
-						return true;
-					}
-				}
-			}
-		}
-		return false;
-	}
+	// private boolean isContainsMethod(String currentMethod,
+	// List<ClassInfoDto> classInfos) {
+	// if (classInfos == null || classInfos.isEmpty()) {
+	// return true;
+	// }
+	// String currentClassName = name.replaceAll("/", ".");
+	// for (ClassInfoDto classInfo : classInfos) {
+	// String className = classInfo.getPackages() + "."
+	// + classInfo.getClassName();
+	// if (currentClassName.equals(className)) {
+	// for (MethodInfoDto methodInfo : classInfo.getMethodInfos()) {
+	// String methodName = methodInfo.getMethodName();
+	// if (currentMethod.equals(methodName)) {
+	// return true;
+	// }
+	// }
+	// }
+	// }
+	// return false;
+	// }
 
 }

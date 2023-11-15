@@ -194,7 +194,7 @@ public class GitAdapter {
 		if (!isCreateBranch && checkBranchNewVersion(localRef)) {
 			return;
 		}
-		//放弃本地修改，方便切换分支
+		// 放弃本地修改，方便切换分支
 		git.reset().setMode(ResetCommand.ResetType.HARD).setRef("HEAD").call();
 		// 切换分支
 		git.checkout().setCreateBranch(isCreateBranch).setName(branchName)

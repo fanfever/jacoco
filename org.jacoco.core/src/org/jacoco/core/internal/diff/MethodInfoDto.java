@@ -12,11 +12,10 @@
  *******************************************************************************/
 package org.jacoco.core.internal.diff;
 
-public class MethodInfo {
-	/**
-	 * 方法的md5
-	 */
-	public String md5;
+import java.util.List;
+
+public class MethodInfoDto {
+
 	/**
 	 * 方法名
 	 */
@@ -24,15 +23,7 @@ public class MethodInfo {
 	/**
 	 * 方法参数
 	 */
-	public String parameters;
-
-	public String getMd5() {
-		return md5;
-	}
-
-	public void setMd5(String md5) {
-		this.md5 = md5;
-	}
+	public List<String> parameters;
 
 	public String getMethodName() {
 		return methodName;
@@ -42,11 +33,11 @@ public class MethodInfo {
 		this.methodName = methodName;
 	}
 
-	public String getParameters() {
+	public List<String> getParameters() {
 		return parameters;
 	}
 
-	public void setParameters(String parameters) {
+	public void setParameters(List<String> parameters) {
 		this.parameters = parameters;
 	}
 }

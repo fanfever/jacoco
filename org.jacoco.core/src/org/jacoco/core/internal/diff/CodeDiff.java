@@ -50,14 +50,14 @@ public class CodeDiff {
 	 *            旧分支名称
 	 * @return
 	 */
-	public static List<ClassInfo> diffBranchToBranch(String gitPath,
+	public static List<ClassInfoDto> diffBranchToBranch(String gitPath,
 			String newBranchName, String oldBranchName) {
-		List<ClassInfo> classInfos = diffMethods(gitPath, newBranchName,
+		List<ClassInfoDto> classInfos = diffMethods(gitPath, newBranchName,
 				oldBranchName);
 		return classInfos;
 	}
 
-	private static List<ClassInfo> diffMethods(String gitPath,
+	private static List<ClassInfoDto> diffMethods(String gitPath,
 			String newBranchName, String oldBranchName) {
 		try {
 			// 获取本地分支
@@ -84,13 +84,13 @@ public class CodeDiff {
 			// 设置比较器为忽略空白字符对比（Ignores all whitespace）
 			df.setDiffComparator(RawTextComparator.WS_IGNORE_ALL);
 			df.setRepository(git.getRepository());
-			List<ClassInfo> allClassInfos = batchPrepareDiffMethod(gitAdapter,
-					newBranchName, oldBranchName, df, diffs);
+			List<ClassInfoDto> allClassInfos = batchPrepareDiffMethod(
+					gitAdapter, newBranchName, oldBranchName, df, diffs);
 			return allClassInfos;
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		return new ArrayList<ClassInfo>();
+		return new ArrayList<ClassInfoDto>();
 	}
 
 	/**
@@ -104,7 +104,7 @@ public class CodeDiff {
 	 *            旧Tag版本
 	 * @return
 	 */
-	public static List<ClassInfo> diffTagToTag(String gitPath,
+	public static List<ClassInfoDto> diffTagToTag(String gitPath,
 			String branchName, String newTag, String oldTag) {
 		if (StringUtils.isEmptyOrNull(gitPath)
 				|| StringUtils.isEmptyOrNull(branchName)
@@ -122,12 +122,12 @@ public class CodeDiff {
 					"Parameter local gitPath is not exit !");
 		}
 
-		List<ClassInfo> classInfos = diffTagMethods(gitPath, branchName, newTag,
-				oldTag);
+		List<ClassInfoDto> classInfos = diffTagMethods(gitPath, branchName,
+				newTag, oldTag);
 		return classInfos;
 	}
 
-	private static List<ClassInfo> diffTagMethods(String gitPath,
+	private static List<ClassInfoDto> diffTagMethods(String gitPath,
 			String branchName, String newTag, String oldTag) {
 		try {
 			// init local repository
@@ -159,13 +159,13 @@ public class CodeDiff {
 			// 设置比较器为忽略空白字符对比（Ignores all whitespace）
 			df.setDiffComparator(RawTextComparator.WS_IGNORE_ALL);
 			df.setRepository(repo);
-			List<ClassInfo> allClassInfos = batchPrepareDiffMethodForTag(
+			List<ClassInfoDto> allClassInfos = batchPrepareDiffMethodForTag(
 					gitAdapter, newTag, oldTag, df, diffs);
 			return allClassInfos;
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		return new ArrayList<ClassInfo>();
+		return new ArrayList<ClassInfoDto>();
 	}
 
 	/**
@@ -173,7 +173,7 @@ public class CodeDiff {
 	 *
 	 * @return
 	 */
-	private static List<ClassInfo> batchPrepareDiffMethodForTag(
+	private static List<ClassInfoDto> batchPrepareDiffMethodForTag(
 			final GitAdapter gitAdapter, final String newTag,
 			final String oldTag, final DiffFormatter df,
 			List<DiffEntry> diffs) {
@@ -184,8 +184,8 @@ public class CodeDiff {
 		ExecutorService executorService = Executors
 				.newFixedThreadPool(threadNum);
 
-		List<Callable<List<ClassInfo>>> tasks = new ArrayList<Callable<List<ClassInfo>>>();
-		Callable<List<ClassInfo>> task = null;
+		List<Callable<List<ClassInfoDto>>> tasks = new ArrayList<Callable<List<ClassInfoDto>>>();
+		Callable<List<ClassInfoDto>> task = null;
 		List<DiffEntry> cutList = null;
 		// 分解每条线程的数据
 		for (int i = 0; i < threadNum; i++) {
@@ -198,11 +198,11 @@ public class CodeDiff {
 				cutList = diffs.subList(threadSize * i, threadSize * (i + 1));
 			}
 			final List<DiffEntry> diffEntryList = cutList;
-			task = new Callable<List<ClassInfo>>() {
-				public List<ClassInfo> call() throws Exception {
-					List<ClassInfo> allList = new ArrayList<ClassInfo>();
+			task = new Callable<List<ClassInfoDto>>() {
+				public List<ClassInfoDto> call() throws Exception {
+					List<ClassInfoDto> allList = new ArrayList<ClassInfoDto>();
 					for (DiffEntry diffEntry : diffEntryList) {
-						ClassInfo classInfo = prepareDiffMethodForTag(
+						ClassInfoDto classInfo = prepareDiffMethodForTag(
 								gitAdapter, newTag, oldTag, df, diffEntry);
 						if (classInfo != null) {
 							allList.add(classInfo);
@@ -214,12 +214,12 @@ public class CodeDiff {
 			// 这里提交的任务容器列表和返回的Future列表存在顺序对应的关系
 			tasks.add(task);
 		}
-		List<ClassInfo> allClassInfoList = new ArrayList<ClassInfo>();
+		List<ClassInfoDto> allClassInfoList = new ArrayList<ClassInfoDto>();
 		try {
-			List<Future<List<ClassInfo>>> results = executorService
+			List<Future<List<ClassInfoDto>>> results = executorService
 					.invokeAll(tasks);
 			// 结果汇总
-			for (Future<List<ClassInfo>> future : results) {
+			for (Future<List<ClassInfoDto>> future : results) {
 				allClassInfoList.addAll(future.get());
 			}
 		} catch (Exception e) {
@@ -241,10 +241,10 @@ public class CodeDiff {
 	 * @param diffEntry
 	 * @return
 	 */
-	private synchronized static ClassInfo prepareDiffMethodForTag(
+	private synchronized static ClassInfoDto prepareDiffMethodForTag(
 			GitAdapter gitAdapter, String newTag, String oldTag,
 			DiffFormatter df, DiffEntry diffEntry) {
-		List<MethodInfo> methodInfoList = new ArrayList<MethodInfo>();
+		List<MethodInfoDto> methodInfoList = new ArrayList<MethodInfoDto>();
 		try {
 			String newJavaPath = diffEntry.getNewPath();
 			// 排除测试类
@@ -295,7 +295,7 @@ public class CodeDiff {
 			for (final MethodDeclaration method : newMethods) {
 				// 如果方法名是新增的,则直接将方法加入List
 				if (!ASTGenerator.isMethodExist(method, methodsMap)) {
-					MethodInfo methodInfo = newAstGenerator
+					MethodInfoDto methodInfo = newAstGenerator
 							.getMethodInfo(method);
 					methodInfoList.add(methodInfo);
 					continue;
@@ -304,7 +304,7 @@ public class CodeDiff {
 				if (!ASTGenerator.isMethodTheSame(method,
 						methodsMap.get(method.getName().toString()
 								+ method.parameters().toString()))) {
-					MethodInfo methodInfo = newAstGenerator
+					MethodInfoDto methodInfo = newAstGenerator
 							.getMethodInfo(method);
 					methodInfoList.add(methodInfo);
 				}
@@ -322,7 +322,7 @@ public class CodeDiff {
 	 *
 	 * @return
 	 */
-	private static List<ClassInfo> batchPrepareDiffMethod(
+	private static List<ClassInfoDto> batchPrepareDiffMethod(
 			final GitAdapter gitAdapter, final String branchName,
 			final String oldBranchName, final DiffFormatter df,
 			List<DiffEntry> diffs) {
@@ -333,8 +333,8 @@ public class CodeDiff {
 		ExecutorService executorService = Executors
 				.newFixedThreadPool(threadNum);
 
-		List<Callable<List<ClassInfo>>> tasks = new ArrayList<Callable<List<ClassInfo>>>();
-		Callable<List<ClassInfo>> task = null;
+		List<Callable<List<ClassInfoDto>>> tasks = new ArrayList<Callable<List<ClassInfoDto>>>();
+		Callable<List<ClassInfoDto>> task = null;
 		List<DiffEntry> cutList = null;
 		// 分解每条线程的数据
 		for (int i = 0; i < threadNum; i++) {
@@ -347,11 +347,11 @@ public class CodeDiff {
 				cutList = diffs.subList(threadSize * i, threadSize * (i + 1));
 			}
 			final List<DiffEntry> diffEntryList = cutList;
-			task = new Callable<List<ClassInfo>>() {
-				public List<ClassInfo> call() throws Exception {
-					List<ClassInfo> allList = new ArrayList<ClassInfo>();
+			task = new Callable<List<ClassInfoDto>>() {
+				public List<ClassInfoDto> call() throws Exception {
+					List<ClassInfoDto> allList = new ArrayList<ClassInfoDto>();
 					for (DiffEntry diffEntry : diffEntryList) {
-						ClassInfo classInfo = prepareDiffMethod(gitAdapter,
+						ClassInfoDto classInfo = prepareDiffMethod(gitAdapter,
 								branchName, oldBranchName, df, diffEntry);
 						if (classInfo != null) {
 							allList.add(classInfo);
@@ -363,12 +363,12 @@ public class CodeDiff {
 			// 这里提交的任务容器列表和返回的Future列表存在顺序对应的关系
 			tasks.add(task);
 		}
-		List<ClassInfo> allClassInfoList = new ArrayList<ClassInfo>();
+		List<ClassInfoDto> allClassInfoList = new ArrayList<ClassInfoDto>();
 		try {
-			List<Future<List<ClassInfo>>> results = executorService
+			List<Future<List<ClassInfoDto>>> results = executorService
 					.invokeAll(tasks);
 			// 结果汇总
-			for (Future<List<ClassInfo>> future : results) {
+			for (Future<List<ClassInfoDto>> future : results) {
 				allClassInfoList.addAll(future.get());
 			}
 		} catch (Exception e) {
@@ -390,10 +390,10 @@ public class CodeDiff {
 	 * @param diffEntry
 	 * @return
 	 */
-	private synchronized static ClassInfo prepareDiffMethod(
+	private synchronized static ClassInfoDto prepareDiffMethod(
 			GitAdapter gitAdapter, String branchName, String oldBranchName,
 			DiffFormatter df, DiffEntry diffEntry) {
-		List<MethodInfo> methodInfoList = new ArrayList<MethodInfo>();
+		List<MethodInfoDto> methodInfoList = new ArrayList<MethodInfoDto>();
 		try {
 			String newJavaPath = diffEntry.getNewPath();
 			// 排除测试类
@@ -444,7 +444,7 @@ public class CodeDiff {
 			for (final MethodDeclaration method : newMethods) {
 				// 如果方法名是新增的,则直接将方法加入List
 				if (!ASTGenerator.isMethodExist(method, methodsMap)) {
-					MethodInfo methodInfo = newAstGenerator
+					MethodInfoDto methodInfo = newAstGenerator
 							.getMethodInfo(method);
 					methodInfoList.add(methodInfo);
 					continue;
@@ -453,7 +453,7 @@ public class CodeDiff {
 				if (!ASTGenerator.isMethodTheSame(method,
 						methodsMap.get(method.getName().toString()
 								+ method.parameters().toString()))) {
-					MethodInfo methodInfo = newAstGenerator
+					MethodInfoDto methodInfo = newAstGenerator
 							.getMethodInfo(method);
 					methodInfoList.add(methodInfo);
 				}

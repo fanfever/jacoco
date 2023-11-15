@@ -23,6 +23,8 @@ import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 
+import static java.lang.System.out;
+
 /**
  * AST编译java源文件
  */
@@ -89,6 +91,26 @@ public class ASTGenerator {
 		return typeDeclaration;
 	}
 
+	 /**
+	 * 获取带有路径的类单元
+	 *
+	 * @return
+	 */
+//	 public String getJavaFile() {
+//		 if (compilationUnit == null) {
+//			 return null;
+//		 }
+//		 TypeDeclaration typeDeclaration = null;
+//		 final List<?> types = compilationUnit.types();
+//		 for (final Object type : types) {
+//			 if (type instanceof TypeDeclaration) {
+//				 typeDeclaration = (TypeDeclaration) type;
+//				 break;
+//			 }
+//		 }
+//		 return compilationUnit.getPackage().getName().toString() + "/" + typeDeclaration.getName();
+//	 }
+
 	/**
 	 * 获取java类中所有方法
 	 *
@@ -108,11 +130,11 @@ public class ASTGenerator {
 	 *
 	 * @return
 	 */
-	public List<MethodInfo> getMethodInfoList() {
+	public List<MethodInfoDto> getMethodInfoList() {
 		MethodDeclaration[] methodDeclarations = getMethods();
-		List<MethodInfo> methodInfoList = new ArrayList<MethodInfo>();
+		List<MethodInfoDto> methodInfoList = new ArrayList<MethodInfoDto>();
 		for (MethodDeclaration method : methodDeclarations) {
-			MethodInfo methodInfo = new MethodInfo();
+			MethodInfoDto methodInfo = new MethodInfoDto();
 			setMethodInfo(methodInfo, method);
 			methodInfoList.add(methodInfo);
 		}
@@ -127,18 +149,19 @@ public class ASTGenerator {
 	 * @param delLines
 	 * @return
 	 */
-	public ClassInfo getClassInfo(List<MethodInfo> methodInfos,
+	public ClassInfoDto getClassInfo(List<MethodInfoDto> methodInfos,
 			List<int[]> addLines, List<int[]> delLines) {
 		TypeDeclaration typeDec = getJavaClass();
 		if (typeDec == null || typeDec.isInterface()) {
 			return null;
 		}
-		ClassInfo classInfo = new ClassInfo();
+		ClassInfoDto classInfo = new ClassInfoDto();
 		classInfo.setClassName(getJavaClass().getName().toString());
-		classInfo.setPackages(getPackageName());
+		out.print("[INFO] classFile:" + getJavaClass().getName().toString());
+		 classInfo.setPackages(getPackageName());
 		classInfo.setMethodInfos(methodInfos);
-		classInfo.setAddLines(addLines);
-		classInfo.setDelLines(delLines);
+		// classInfo.setAddLines(addLines);
+		// classInfo.setDelLines(delLines);
 		classInfo.setType("REPLACE");
 		return classInfo;
 	}
@@ -148,19 +171,21 @@ public class ASTGenerator {
 	 *
 	 * @return
 	 */
-	public ClassInfo getClassInfo() {
+	public ClassInfoDto getClassInfo() {
 		TypeDeclaration typeDec = getJavaClass();
 		if (typeDec == null || typeDec.isInterface()) {
 			return null;
 		}
 		MethodDeclaration[] methodDeclarations = getMethods();
-		ClassInfo classInfo = new ClassInfo();
-		classInfo.setClassName(getJavaClass().getName().toString());
-		classInfo.setPackages(getPackageName());
+		ClassInfoDto classInfo = new ClassInfoDto();
+		 classInfo.setClassName(getJavaClass().getName().toString());
+		classInfo.setClassFile(getJavaClass().getName().toString());
+		out.print("[INFO] classFile:" + getJavaClass().getName().toString());
+		// classInfo.setPackages(getPackageName());
 		classInfo.setType("ADD");
-		List<MethodInfo> methodInfoList = new ArrayList<MethodInfo>();
+		List<MethodInfoDto> methodInfoList = new ArrayList<MethodInfoDto>();
 		for (MethodDeclaration method : methodDeclarations) {
-			MethodInfo methodInfo = new MethodInfo();
+			MethodInfoDto methodInfo = new MethodInfoDto();
 			setMethodInfo(methodInfo, method);
 			methodInfoList.add(methodInfo);
 		}
@@ -174,17 +199,17 @@ public class ASTGenerator {
 	 * @param methodDeclaration
 	 * @return
 	 */
-	public MethodInfo getMethodInfo(MethodDeclaration methodDeclaration) {
-		MethodInfo methodInfo = new MethodInfo();
+	public MethodInfoDto getMethodInfo(MethodDeclaration methodDeclaration) {
+		MethodInfoDto methodInfo = new MethodInfoDto();
 		setMethodInfo(methodInfo, methodDeclaration);
 		return methodInfo;
 	}
 
-	private void setMethodInfo(MethodInfo methodInfo,
+	private void setMethodInfo(MethodInfoDto methodInfo,
 			MethodDeclaration methodDeclaration) {
-		methodInfo.setMd5(MD5Encode(methodDeclaration.toString()));
+		// methodInfo.setMd5(MD5Encode(methodDeclaration.toString()));
 		methodInfo.setMethodName(methodDeclaration.getName().toString());
-		methodInfo.setParameters(methodDeclaration.parameters().toString());
+		methodInfo.setParameters(methodDeclaration.parameters());
 	}
 
 	/**

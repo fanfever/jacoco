@@ -16,6 +16,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 import java.util.StringTokenizer;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.ZipEntry;
@@ -31,6 +32,9 @@ import org.jacoco.core.internal.analysis.ClassAnalyzer;
 import org.jacoco.core.internal.analysis.ClassCoverageImpl;
 import org.jacoco.core.internal.analysis.StringPool;
 import org.jacoco.core.internal.data.CRC64;
+import org.jacoco.core.internal.diff.ClassInfoDto;
+import org.jacoco.core.internal.diff.ClassInfoDto;
+import org.jacoco.core.internal.diff.CodeDiffUtil;
 import org.jacoco.core.internal.flow.ClassProbesAdapter;
 import org.jacoco.core.internal.instr.InstrSupport;
 import org.objectweb.asm.ClassReader;
@@ -52,6 +56,8 @@ public class Analyzer {
 	private final ICoverageVisitor coverageVisitor;
 
 	private final StringPool stringPool;
+
+	private List<ClassInfoDto> classInfos;
 
 	/**
 	 * Creates a new analyzer reporting to the given output.
@@ -93,7 +99,7 @@ public class Analyzer {
 		final ClassCoverageImpl coverage = new ClassCoverageImpl(className,
 				classid, noMatch);
 		final ClassAnalyzer analyzer = new ClassAnalyzer(coverage, probes,
-				stringPool) {
+				stringPool, this.classInfos) {
 			@Override
 			public void visitEnd() {
 				super.visitEnd();
@@ -111,6 +117,18 @@ public class Analyzer {
 		}
 		if ((reader.getAccess() & Opcodes.ACC_SYNTHETIC) != 0) {
 			return;
+		}
+		if (this.coverageVisitor instanceof CoverageBuilder) {
+			this.classInfos = ((CoverageBuilder) this.coverageVisitor)
+					.getClassInfos();
+		}
+		// 字段不为空说明是增量覆盖
+		if (null != this.classInfos && !this.classInfos.isEmpty()) {
+			// 如果没有匹配到增量代码就无需解析类
+			if (!CodeDiffUtil.checkClassIn(reader.getClassName(),
+					this.classInfos)) {
+				return;
+			}
 		}
 		final ClassVisitor visitor = createAnalyzingVisitor(classId,
 				reader.getClassName());
