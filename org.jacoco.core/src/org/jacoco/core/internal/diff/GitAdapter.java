@@ -17,6 +17,7 @@ import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
 import org.eclipse.jgit.api.CreateBranchCommand;
 import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.ResetCommand;
 import org.eclipse.jgit.api.TransportConfigCallback;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.*;
@@ -43,9 +44,6 @@ public class GitAdapter {
 	private Git git;
 	private Repository repository;
 	private final String gitFilePath;
-
-	// Git授权
-	private static UsernamePasswordCredentialsProvider usernamePasswordCredentialsProvider;
 
 	TransportConfigCallback transportConfigCallback = new TransportConfigCallback() {
 
@@ -196,6 +194,8 @@ public class GitAdapter {
 		if (!isCreateBranch && checkBranchNewVersion(localRef)) {
 			return;
 		}
+		//放弃本地修改，方便切换分支
+		git.reset().setMode(ResetCommand.ResetType.HARD).setRef("HEAD").call();
 		// 切换分支
 		git.checkout().setCreateBranch(isCreateBranch).setName(branchName)
 				.setStartPoint("origin/" + branchName)
