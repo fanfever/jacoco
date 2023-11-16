@@ -16,6 +16,8 @@ import org.objectweb.asm.Type;
 
 import java.util.List;
 
+import static java.lang.System.out;
+
 public class CodeDiffUtil {
 
 	private final static String OPERATE_ADD = "ADD";
@@ -32,6 +34,7 @@ public class CodeDiffUtil {
 			return Boolean.FALSE;
 		}
 		// 这里要考虑匿名内部类的问题
+		out.print("[INFO] checkClassIn#className:" + className);
 		return classInfos.stream()
 				.anyMatch(c -> className.equals(c.getClassFile())
 						|| className.split("\\$")[0].equals(c.getClassFile()));
@@ -51,6 +54,7 @@ public class CodeDiffUtil {
 				|| null == className) {
 			return Boolean.FALSE;
 		}
+		out.print("[INFO] checkMethodIn#className:" + className);
 		ClassInfoDto classInfoDto = classInfos.stream()
 				.filter(c -> className.equals(c.getClassFile())
 						|| className.split("\\$")[0].equals(c.getClassFile()))

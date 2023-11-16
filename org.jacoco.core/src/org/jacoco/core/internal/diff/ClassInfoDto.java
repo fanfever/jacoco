@@ -12,7 +12,12 @@
  *******************************************************************************/
 package org.jacoco.core.internal.diff;
 
+import org.apache.commons.lang3.StringUtils;
+
 import java.util.List;
+import java.util.Objects;
+
+import static java.lang.System.out;
 
 public class ClassInfoDto {
 	/**
@@ -35,7 +40,10 @@ public class ClassInfoDto {
 	private String type;
 
 	public String getClassFile() {
-		return packages + "/" + className;
+		if (Objects.isNull(packages) || Objects.isNull(className)) {
+			return null;
+		}
+		return StringUtils.replace(packages, ".", "/") + "/" + className;
 	}
 
 	public void setClassFile(String classFile) {

@@ -14,6 +14,7 @@ package org.jacoco.core.internal.diff;
 
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.dom.*;
+import org.w3c.dom.NodeList;
 
 import java.io.*;
 import java.security.MessageDigest;
@@ -22,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import static java.lang.System.out;
 
@@ -91,25 +93,26 @@ public class ASTGenerator {
 		return typeDeclaration;
 	}
 
-	 /**
+	/**
 	 * 获取带有路径的类单元
 	 *
 	 * @return
 	 */
-//	 public String getJavaFile() {
-//		 if (compilationUnit == null) {
-//			 return null;
-//		 }
-//		 TypeDeclaration typeDeclaration = null;
-//		 final List<?> types = compilationUnit.types();
-//		 for (final Object type : types) {
-//			 if (type instanceof TypeDeclaration) {
-//				 typeDeclaration = (TypeDeclaration) type;
-//				 break;
-//			 }
-//		 }
-//		 return compilationUnit.getPackage().getName().toString() + "/" + typeDeclaration.getName();
-//	 }
+	// public String getJavaFile() {
+	// if (compilationUnit == null) {
+	// return null;
+	// }
+	// TypeDeclaration typeDeclaration = null;
+	// final List<?> types = compilationUnit.types();
+	// for (final Object type : types) {
+	// if (type instanceof TypeDeclaration) {
+	// typeDeclaration = (TypeDeclaration) type;
+	// break;
+	// }
+	// }
+	// return compilationUnit.getPackage().getName().toString() + "/" +
+	// typeDeclaration.getName();
+	// }
 
 	/**
 	 * 获取java类中所有方法
@@ -157,8 +160,7 @@ public class ASTGenerator {
 		}
 		ClassInfoDto classInfo = new ClassInfoDto();
 		classInfo.setClassName(getJavaClass().getName().toString());
-		out.print("[INFO] classFile:" + getJavaClass().getName().toString());
-		 classInfo.setPackages(getPackageName());
+		classInfo.setPackages(getPackageName());
 		classInfo.setMethodInfos(methodInfos);
 		// classInfo.setAddLines(addLines);
 		// classInfo.setDelLines(delLines);
@@ -178,10 +180,9 @@ public class ASTGenerator {
 		}
 		MethodDeclaration[] methodDeclarations = getMethods();
 		ClassInfoDto classInfo = new ClassInfoDto();
-		 classInfo.setClassName(getJavaClass().getName().toString());
-		classInfo.setClassFile(getJavaClass().getName().toString());
+		classInfo.setClassName(getJavaClass().getName().toString());
 		out.print("[INFO] classFile:" + getJavaClass().getName().toString());
-		// classInfo.setPackages(getPackageName());
+		classInfo.setPackages(getPackageName());
 		classInfo.setType("ADD");
 		List<MethodInfoDto> methodInfoList = new ArrayList<MethodInfoDto>();
 		for (MethodDeclaration method : methodDeclarations) {
@@ -209,7 +210,24 @@ public class ASTGenerator {
 			MethodDeclaration methodDeclaration) {
 		// methodInfo.setMd5(MD5Encode(methodDeclaration.toString()));
 		methodInfo.setMethodName(methodDeclaration.getName().toString());
-		methodInfo.setParameters(methodDeclaration.parameters());
+		List<String> parameterNames = new ArrayList<>();
+		for (Object parameter : methodDeclaration.parameters()) {
+			if (parameter instanceof VariableDeclarationFragment) {
+				VariableDeclarationFragment fragment = (VariableDeclarationFragment) parameter;
+				SimpleName name = fragment.getName();
+				if (name != null) {
+					parameterNames.add(name.getIdentifier());
+				}
+			}
+			if (parameter instanceof SingleVariableDeclaration) {
+				SingleVariableDeclaration fragment = (SingleVariableDeclaration) parameter;
+				SimpleName name = fragment.getName();
+				if (name != null) {
+					parameterNames.add(name.getIdentifier());
+				}
+			}
+		}
+		methodInfo.setParameters(parameterNames);
 	}
 
 	/**

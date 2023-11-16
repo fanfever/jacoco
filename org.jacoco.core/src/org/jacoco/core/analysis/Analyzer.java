@@ -41,6 +41,8 @@ import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.Opcodes;
 
+import static java.lang.System.out;
+
 /**
  * An {@link Analyzer} instance processes a set of Java class files and
  * calculates coverage data for them. For each class file the result is reported

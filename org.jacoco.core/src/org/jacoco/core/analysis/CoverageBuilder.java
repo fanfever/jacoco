@@ -13,11 +13,14 @@
 package org.jacoco.core.analysis;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import org.jacoco.core.internal.analysis.BundleCoverageImpl;
 import org.jacoco.core.internal.analysis.SourceFileCoverageImpl;
 import org.jacoco.core.internal.diff.ClassInfoDto;
 import org.jacoco.core.internal.diff.CodeDiff;
+
+import static java.lang.System.out;
 
 /**
  * Builder for hierarchical {@link ICoverageNode} structures from single
@@ -81,6 +84,9 @@ public class CoverageBuilder implements ICoverageVisitor {
 		this.sourcefiles = new HashMap<String, ISourceFileCoverage>();
 		classInfos = CodeDiff.diffBranchToBranch(gitPath, newBranchName,
 				oldBranchName);
+		out.print("[INFO] CoverageBuilder#classInfos:"
+				+ classInfos.stream().map(info -> info.getClassFile())
+						.collect(Collectors.joining(", ")));
 	}
 
 	/**
@@ -100,6 +106,9 @@ public class CoverageBuilder implements ICoverageVisitor {
 		this.classes = new HashMap<String, IClassCoverage>();
 		this.sourcefiles = new HashMap<String, ISourceFileCoverage>();
 		classInfos = CodeDiff.diffTagToTag(gitPath, branchName, newTag, oldTag);
+		out.print("[INFO] CoverageBuilder#classInfos:"
+				+ classInfos.stream().map(info -> info.getClassFile())
+						.collect(Collectors.joining(", ")));
 	}
 
 	/**
