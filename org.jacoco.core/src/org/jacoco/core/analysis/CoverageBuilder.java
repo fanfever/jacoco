@@ -87,9 +87,9 @@ public class CoverageBuilder implements ICoverageVisitor {
 		out.print("[INFO] CoverageBuilder#classInfos:"
 				+ classInfos.stream().map(info -> info.getClassFile())
 						.collect(Collectors.joining(", ")));
-		out.print("[INFO] CoverageBuilder#methodInfos:"
-				+ classInfos.stream().flatMap(info -> info.getMethodInfos().stream()).map(i -> i.getMethodName())
-				.collect(Collectors.joining(", ")));
+		out.print("[INFO] CoverageBuilder#methodInfos:" + classInfos.stream()
+				.flatMap(info -> info.getMethodInfos().stream())
+				.map(i -> i.getMethodName()).collect(Collectors.joining(", ")));
 	}
 
 	/**
@@ -112,9 +112,9 @@ public class CoverageBuilder implements ICoverageVisitor {
 		out.print("[INFO] CoverageBuilder#classInfos:"
 				+ classInfos.stream().map(info -> info.getClassFile())
 						.collect(Collectors.joining(", ")));
-		out.print("[INFO] CoverageBuilder#methodInfos:"
-				+ classInfos.stream().flatMap(info -> info.getMethodInfos().stream()).map(i -> i.getMethodName())
-				.collect(Collectors.joining(", ")));
+		out.print("[INFO] CoverageBuilder#methodInfos:" + classInfos.stream()
+				.flatMap(info -> info.getMethodInfos().stream())
+				.map(i -> i.getMethodName()).collect(Collectors.joining(", ")));
 	}
 
 	/**
